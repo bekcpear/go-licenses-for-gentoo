@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+#
+# @author: cwittlut <i@bitbili.net>
+#
+
+# key   = licenese name parsed by go-liceneses
+# value = corresponding Gentoo Linux license name
+# declare -A _lic_mappings=(
+#     [key]=value
+# )
+
+declare -A _lic_mappings=(
+  [BSD-2-Clause]="BSD-2"
+  [BSD-3-Clause]="BSD"
+  [LGPL-3.0]="LGPL-3"
+)
