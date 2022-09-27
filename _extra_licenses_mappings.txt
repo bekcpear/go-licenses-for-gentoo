@@ -3,7 +3,7 @@
 # @author: cwittlut <i@bitbili.net>
 #
 
-# key   = licenese name parsed by go-liceneses
+# key   = licenese name parsed by go-licenses
 # value = corresponding Gentoo Linux license name
 # declare -A _lic_mappings=(
 #     [key]=value
