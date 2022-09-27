@@ -47,7 +47,6 @@ _golic() {
   echo
   _echo "CSV: ${_data_csv}"
   _echo "MSG: ${_data_msg}"
-  echo
 }
 
 _parselic() {
@@ -111,7 +110,6 @@ _parselic() {
   done
 
   local _new_l_string="\x1b[32m*new\x1b[0m"
-  local -i _new_flag=0
   __lic_print() {
     for _l in "${@}"; do
       echo -n "${_l}"
@@ -123,6 +121,7 @@ _parselic() {
       echo -e "${_license_name_placeholder:${#_l}} ${_new_l}"
     done
   }
+  echo
   _echo "Corresponding Gentoo Linux LICENSES names:"
   _echo "\x1b[32m\x1b[1m================================\x1b[0m"
   __lic_print "${_parsed_licenses[@]}"
@@ -133,6 +132,7 @@ _parselic() {
   if [[ ${#_unparsed_licenses[@]} -eq 0 ]]; then
     return
   fi
+  _unparsed_flag=1
   echo
   _warn "Unparsed LICENSES names:"
   _warn "\x1b[33m\x1b[1m================================\x1b[0m"
@@ -161,4 +161,10 @@ _date=$(date '+%s.%Y%m%d.%H-%M-%S%z')
 _golic ./...
 
 # parse licenses
+declare -i _new_flag=0 _unparsed_flag=0
 _parselic
+if [[ ${_new_flag} -eq 1 ]] || [[ ${_unparsed_flag} -eq 1 ]]; then
+  echo
+  _warn "Should be updated!"
+  exit 9
+fi
