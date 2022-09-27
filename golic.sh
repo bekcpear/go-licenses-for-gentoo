@@ -28,13 +28,52 @@ _do() {
 }
 
 _echo() {
-  echo -ne "\x1b[32m\x1b[1m===\x1b[0m "
-  echo -e "${@}"
+  local _prefix="=== " _prefix_clean="\x1b[0m" _c=32 _fd="&1" _n=""
+  local _called=${FUNCNAME[1]}
+  case ${_called} in
+    _warn*)
+      _c=33
+      _fd="&2"
+      ;;
+    _list*)
+      _c=0
+      _prefix="  • "
+      ;;
+    _resu)
+      _c=0
+      _prefix=""
+      _suffix_clean="${_prefix_clean}"
+      _prefix_clean=""
+  esac
+  if [[ ${_called} =~ ^_warnn|_listn$ ]]; then
+    _n="n"
+  fi
+
+  if [[ ${1} == "c" ]]; then
+    shift
+    _suffix_clean="${_prefix_clean}"
+    _prefix_clean=""
+  fi
+
+  _prefix_decorate="\x1b[${_c}m\x1b[1m"
+  _prefix="${_prefix_decorate}${_prefix}${_prefix_clean}"
+  eval "echo -${_n}e \"${_prefix}\"\"\${@}\"\"${_suffix_clean}\" >${_fd}"
+}
+
+_listn() {
+  _echo "${@}"
+}
+
+_resu() {
+  _echo "${@}"
 }
 
 _warn() {
-  echo -ne "\x1b[33m\x1b[1m===\x1b[0m " >&2
-  echo -e "${@}" >&2
+  _echo "${@}"
+}
+
+_warnn() {
+  _echo "${@}"
 }
 
 _golic() {
@@ -62,8 +101,8 @@ _parselic() {
       _last_licenses["${_l}"]=1
     done
   fi
-  local -a _parsed_licenses=()
-  local -a _unparsed_licenses=()
+
+  local -a _parsed_licenses=() _unparsed_licenses=()
   local -i _license_name_max_len=0
   __update_max_len() {
     if [[ ${1} -gt ${_license_name_max_len} ]]; then
@@ -111,10 +150,14 @@ _parselic() {
 
   local _new_l_string="\x1b[32m*new\x1b[0m"
   __lic_print() {
+    if [[ ${1} == "-u" ]]; then
+      _unparsed_print=1
+      shift
+    fi
     for _l in "${@}"; do
-      echo -n "${_l}"
+      _listn "${_l}"
       local _new_l=""
-      if [[ -z ${_last_licenses[${_l}]} ]]; then
+      if [[ -z ${_last_licenses[${_l}]} ]] && [[ -z ${_unparsed_print} ]]; then
         _new_l=${_new_l_string}
         _new_flag=1
       fi
@@ -122,22 +165,38 @@ _parselic() {
     done
   }
   echo
-  _echo "Corresponding Gentoo Linux LICENSES names:"
+  _echo "Corresponding LICENSE name on Gentoo Linux:"
   _echo "\x1b[32m\x1b[1m================================\x1b[0m"
   __lic_print "${_parsed_licenses[@]}"
   _echo "\x1b[32m\x1b[1m================================\x1b[0m"
   if [[ ${_new_flag} -eq 1 ]]; then
-    _echo "${_new_l_string} means: compared with the last run, this license has been added."
+    _echo "${_new_l_string} means: This license is newly added compared to the result of the last run."
   fi
-  if [[ ${#_unparsed_licenses[@]} -eq 0 ]]; then
-    return
+
+  if [[ ${#_unparsed_licenses[@]} -gt 0 ]]; then
+    _unparsed_flag=1
   fi
-  _unparsed_flag=1
-  echo
-  _warn "Unparsed LICENSES names:"
-  _warn "\x1b[33m\x1b[1m================================\x1b[0m"
-  __lic_print "${_unparsed_licenses[@]}"
-  _warn "\x1b[33m\x1b[1m================================\x1b[0m"
+
+  local -i _ret=0
+
+  if [[ ${_unparsed_flag} -eq 1 ]]; then
+    echo
+    _warn "Please fix unparsed LICENSE name!"
+    _warn c "================================"
+    __lic_print -u "${_unparsed_licenses[@]}"
+    _warn c "================================"
+    _ret=8
+  elif [[ ${_new_flag} -eq 1 ]]; then
+    echo
+    _warn "Should be updated!"
+    _warn c "================================"
+    _warnn
+    _resu "LICENSE=\"${_parsed_licenses[@]}\""
+    _warn c "================================"
+    _ret=9
+  fi
+
+  return ${_ret}
 }
 
 # push to go module directory if provided
@@ -161,10 +220,5 @@ _date=$(date '+%s.%Y%m%d.%H-%M-%S%z')
 _golic ./...
 
 # parse licenses
-declare -i _new_flag=0 _unparsed_flag=0
+declare -i _new_flag=0 _unparsed_flag=0 _ret=0
 _parselic
-if [[ ${_new_flag} -eq 1 ]] || [[ ${_unparsed_flag} -eq 1 ]]; then
-  echo
-  _warn "Should be updated!"
-  exit 9
-fi
