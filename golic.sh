@@ -103,7 +103,7 @@ _parselic() {
   fi
 
   local -a _parsed_licenses=() _unparsed_licenses=()
-  local -i _license_name_max_len=0
+  local -i _new_flag=0 _unparsed_flag=0 _license_name_max_len=0 _ret=0
   __update_max_len() {
     if [[ ${1} -gt ${_license_name_max_len} ]]; then
       _license_name_max_len=${1}
@@ -177,8 +177,6 @@ _parselic() {
     _unparsed_flag=1
   fi
 
-  local -i _ret=0
-
   if [[ ${_unparsed_flag} -eq 1 ]]; then
     echo
     _warn "Please fix unparsed LICENSE name!"
@@ -188,7 +186,7 @@ _parselic() {
     _ret=8
   elif [[ ${_new_flag} -eq 1 ]]; then
     echo
-    _warn "Should be updated!"
+    _warn "Should be update!"
     _warn c "================================"
     _warnn
     _resu "LICENSE=\"${_parsed_licenses[@]}\""
@@ -220,5 +218,4 @@ _date=$(date '+%s.%Y%m%d.%H-%M-%S%z')
 _golic ./...
 
 # parse licenses
-declare -i _new_flag=0 _unparsed_flag=0 _ret=0
 _parselic
