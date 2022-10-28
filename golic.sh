@@ -182,6 +182,9 @@ _parselic() {
     _warn "Please fix unparsed LICENSE name!"
     _warn c "================================"
     __lic_print -u "${_unparsed_licenses[@]}"
+    _warn c "--------------------------------"
+    _warnn
+    _resu "LICENSE=\"${_parsed_licenses[@]}\""
     _warn c "================================"
     _ret=8
   elif [[ ${_new_flag} -eq 1 ]]; then
